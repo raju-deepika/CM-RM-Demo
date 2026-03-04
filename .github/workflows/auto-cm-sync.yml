@@ -6,7 +6,6 @@ on:
       - dev-RM
     types: [closed]
 
-  
 jobs:
   auto-create:
     if: github.event.pull_request.merged == true
@@ -16,7 +15,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0   # required to see full history
+          fetch-depth: 0   # required for full history
 
       - name: Configure Git
         run: |
@@ -31,18 +30,23 @@ jobs:
           git fetch origin
           git checkout $FEATURE_BRANCH
           git checkout -b $TEMP_BRANCH
-          # Make sure there is at least 1 commit; temp branch has changes
           git push origin $TEMP_BRANCH
           echo "Temp branch created: $TEMP_BRANCH"
+          echo "TEMP_BRANCH=$TEMP_BRANCH" >> $GITHUB_ENV
 
       - name: Create PR to dev-CM
         id: create-pr
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          branch: ${{ env.TEMP_BRANCH }}      # temp branch pushed
-          base: dev-CM                        # base branch CM
+          branch: ${{ env.TEMP_BRANCH }}   # temp branch as compare branch
+          base: dev-CM                     # base branch
           title: "Synchronizing RM Changes to CM"
           body: |
             Auto-created PR from temp branch ${{ env.TEMP_BRANCH }} to dev-CM
             Please resolve conflicts if any, then merge.
+
+      - name: Show PR URL
+        run: |
+          PR_URL=$(jq -r '.html_url' <<< '${{ steps.create-pr.outputs.pull-request }}')
+          echo "Pull Request created: $PR_URL"
