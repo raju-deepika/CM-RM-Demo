@@ -15,7 +15,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0
+          fetch-depth: 0   # required to see full history
 
       - name: Configure Git
         run: |
@@ -30,24 +30,18 @@ jobs:
           git fetch origin
           git checkout $FEATURE_BRANCH
           git checkout -b $TEMP_BRANCH
+          # Make sure there is at least 1 commit; temp branch has changes
           git push origin $TEMP_BRANCH
-          echo "TEMP_BRANCH=$TEMP_BRANCH" >> $GITHUB_ENV
+          echo "Temp branch created: $TEMP_BRANCH"
 
       - name: Create PR to dev-CM
-        id: pr
+        id: create-pr
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          branch: ${{ env.TEMP_BRANCH }}
-          base: dev-CM
+          branch: ${{ env.TEMP_BRANCH }}      # temp branch pushed
+          base: dev-CM                        # base branch CM
           title: "Synchronizing RM Changes to CM"
-          body: "Auto-created PR from temp branch ${{ env.TEMP_BRANCH }} to dev-CM"
-          draft: false
-
-      - name: Get PR URL
-        id: get-url
-        run: |
-          echo "PR_URL=$(jq -r '.html_url' <<< '${{ steps.pr.outputs.pull-request }}')" >> $GITHUB_ENV
-          echo "PR_URL=${{ env.PR_URL }}"
-
-    
+          body: |
+            Auto-created PR from temp branch ${{ env.TEMP_BRANCH }} to dev-CM
+            Please resolve conflicts if any, then merge.
