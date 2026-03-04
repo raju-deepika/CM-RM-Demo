@@ -15,7 +15,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0   # required for full history
+          fetch-depth: 0
 
       - name: Configure Git
         run: |
@@ -31,7 +31,6 @@ jobs:
           git checkout $FEATURE_BRANCH
           git checkout -b $TEMP_BRANCH
           git push origin $TEMP_BRANCH
-          echo "Temp branch created: $TEMP_BRANCH"
           echo "TEMP_BRANCH=$TEMP_BRANCH" >> $GITHUB_ENV
 
       - name: Create PR to dev-CM
@@ -39,8 +38,8 @@ jobs:
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          branch: ${{ env.TEMP_BRANCH }}   # temp branch as compare branch
-          base: dev-CM                     # base branch
+          branch: ${{ env.TEMP_BRANCH }}
+          base: dev-CM
           title: "Synchronizing RM Changes to CM"
           body: |
             Auto-created PR from temp branch ${{ env.TEMP_BRANCH }} to dev-CM
@@ -48,5 +47,4 @@ jobs:
 
       - name: Show PR URL
         run: |
-          PR_URL=$(jq -r '.html_url' <<< '${{ steps.create-pr.outputs.pull-request }}')
-          echo "Pull Request created: $PR_URL"
+          echo "Pull Request URL: ${{ steps.create-pr.outputs.pull-request-url }}"
