@@ -33,18 +33,26 @@ jobs:
           git push origin $TEMP_BRANCH
           echo "TEMP_BRANCH=$TEMP_BRANCH" >> $GITHUB_ENV
 
-      - name: Create PR to dev-CM
+      - name: Create PR to dev-CM (or get existing)
         id: create-pr
-        uses: peter-evans/create-pull-request@v5
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          branch: ${{ env.TEMP_BRANCH }}
-          base: dev-CM
-          title: "Synchronizing RM Changes to CM"
-          body: |
-            Auto-created PR from temp branch ${{ env.TEMP_BRANCH }} to dev-CM
-            Please resolve conflicts if any, then merge.
-
-      - name: Show PR URL
         run: |
-          echo "Pull Request URL: ${{ steps.create-pr.outputs.pull-request-url }}"
+          # Install GitHub CLI
+          sudo apt update
+          sudo apt install -y gh
+
+          # Authenticate with token
+          echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
+
+          # Create PR if it doesn't exist, otherwise get the existing PR URL
+          PR_URL=$(gh pr list --head ${{ env.TEMP_BRANCH }} --base dev-CM --json url --jq '.[0].url')
+          if [ -z "$PR_URL" ]; then
+            PR_URL=$(gh pr create \
+              --base dev-CM \
+              --head ${{ env.TEMP_BRANCH }} \
+              --title "Synchronizing RM Changes to CM" \
+              --body "Auto-created PR from temp branch ${{ env.TEMP_BRANCH }} to dev-CM
+          Please resolve conflicts if any, then merge." \
+              --json url --jq '.url')
+          fi
+          echo "PR_URL=$PR_URL"
+          echo "Pull Request URL: $PR_URL"
