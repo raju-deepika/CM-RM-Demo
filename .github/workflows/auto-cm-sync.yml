@@ -1,0 +1,37 @@
+name: Auto Create CM PR
+
+on:
+  pull_request:
+    branches:
+      - dev-RM
+    types: [closed]  # triggers when PR is merged/closed
+
+jobs:
+  auto-create:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "actions@github.com"
+
+      - name: Create Temp Branch from Feature Branch
+        run: |
+          FEATURE_BRANCH=${{ github.event.pull_request.head.ref }}
+          git fetch origin
+          git checkout $FEATURE_BRANCH
+          git checkout -b temp-$FEATURE_BRANCH
+          git push origin temp-$FEATURE_BRANCH
+
+      - name: Create PR to dev-CM
+        uses: peter-evans/create-pull-request@v5
+        with:
+          branch: temp-${{ github.event.pull_request.head.ref }}
+          base: dev-CM
+          title: "Synchronizing RM Changes to CM"
+          body: "Auto-created PR from feature branch to dev-CM"
