@@ -6,6 +6,7 @@ on:
       - dev-RM
     types: [closed]
 
+  
 jobs:
   auto-create:
     if: github.event.pull_request.merged == true
