@@ -50,24 +50,4 @@ jobs:
           echo "PR_URL=$(jq -r '.html_url' <<< '${{ steps.pr.outputs.pull-request }}')" >> $GITHUB_ENV
           echo "PR_URL=${{ env.PR_URL }}"
 
-      - name: Send Email Notification
-        uses: dawidd6/action-send-mail@v3
-        with:
-          server_address: smtp.gmail.com
-          server_port: 465
-          username: ${{ secrets.MAIL_USERNAME }}
-          password: ${{ secrets.MAIL_PASSWORD }}
-          subject: "PR Created: Sync RM to CM"
-          to: "capgemini.raju@mercedes-benz.com"
-          from: "github-actions@example.com"
-          body: |
-            Hello,
-
-            A new Pull Request has been created to synchronize RM changes to CM.
-            
-            PR URL: ${{ env.PR_URL }}
-
-            Please review and resolve any conflicts if needed, then merge.
-
-            Thank you.
-            
+    
