@@ -1,38 +1,16 @@
-name: Auto Sync RM to CM
+name: Auto Create CM PR
 
 on:
-  push:
+  pull_request:
     branches:
-      - feature-*  # triggers when a feature branch is pushed
+      - dev-RM
+    types: [closed]
 
 jobs:
-  feature-to-dev-rm:
+  auto-create:
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
 
-      - name: Configure Git
-        run: |
-          git config --global user.name "github-actions"
-          git config --global user.email "actions@github.com"
-
-      - name: Create PR from Feature Branch → dev-RM
-        id: feature-pr
-        uses: peter-evans/create-pull-request@v5
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          branch: ${{ github.ref_name }}   # feature branch
-          base: dev-RM                     # base branch explicitly dev-RM
-          title: "Feature branch ${{ github.ref_name }} → dev-RM"
-          body: "Auto-created PR from feature branch ${{ github.ref_name }} to dev-RM. Please review and merge."
-
-  temp-branch-to-dev-cm:
-    needs: feature-to-dev-rm
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push'  # run after feature PR merge
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -47,7 +25,7 @@ jobs:
       - name: Create Temp Branch from Feature Branch
         id: create-temp
         run: |
-          FEATURE_BRANCH=${{ github.ref_name }}
+          FEATURE_BRANCH=${{ github.event.pull_request.head.ref }}
           TEMP_BRANCH=temp-$FEATURE_BRANCH
           git fetch origin
           git checkout $FEATURE_BRANCH
@@ -64,12 +42,14 @@ jobs:
         run: |
           echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
 
-      - name: Create PR or get existing PR URL (Temp → dev-CM)
+      - name: Create PR or get existing PR URL
         id: create-pr
         run: |
+          # Check if a PR already exists for temp branch -> dev-CM
           PR_URL=$(gh pr list --head ${{ env.TEMP_BRANCH }} --base dev-CM --limit 1 --json url --jq '.[0].url' 2>/dev/null || echo "")
           
           if [ -z "$PR_URL" ]; then
+            # Create a new PR
             PR_URL=$(gh pr create \
               --base dev-CM \
               --head ${{ env.TEMP_BRANCH }} \
