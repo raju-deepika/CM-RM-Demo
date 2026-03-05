@@ -17,6 +17,7 @@ jobs:
         with:
           fetch-depth: 0
 
+          
       - name: Configure Git
         run: |
           git config --global user.name "github-actions"
