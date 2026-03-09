@@ -17,6 +17,7 @@ jobs:
         with:
           fetch-depth: 0
 
+          
       - name: Configure Git
         run: |
           git config --global user.name "github-actions"
@@ -33,41 +34,30 @@ jobs:
           git push origin $TEMP_BRANCH
           echo "TEMP_BRANCH=$TEMP_BRANCH" >> $GITHUB_ENV
 
-      - name: Create PR to dev-CM
-        id: pr
-        uses: peter-evans/create-pull-request@v5
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          branch: ${{ env.TEMP_BRANCH }}
-          base: dev-CM
-          title: "Synchronizing RM Changes to CM"
-          body: "Auto-created PR from temp branch ${{ env.TEMP_BRANCH }} to dev-CM"
-          draft: false
-
-      - name: Get PR URL
-        id: get-url
+      - name: Install GH CLI
         run: |
-          echo "PR_URL=$(jq -r '.html_url' <<< '${{ steps.pr.outputs.pull-request }}')" >> $GITHUB_ENV
-          echo "PR_URL=${{ env.PR_URL }}"
+          sudo apt update
+          sudo apt install -y gh
 
-      - name: Send Email Notification
-        uses: dawidd6/action-send-mail@v3
-        with:
-          server_address: smtp.gmail.com
-          server_port: 465
-          username: ${{ secrets.MAIL_USERNAME }}
-          password: ${{ secrets.MAIL_PASSWORD }}
-          subject: "PR Created: Sync RM to CM"
-          to: "capgemini.raju@mercedes-benz.com"
-          from: "github-actions@example.com"
-          body: |
-            Hello,
+      - name: Authenticate GH CLI
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
 
-            A new Pull Request has been created to synchronize RM changes to CM.
-            
-            PR URL: ${{ env.PR_URL }}
-
-            Please review and resolve any conflicts if needed, then merge.
-
-            Thank you.
-            
+      - name: Create PR or get existing PR URL
+        id: create-pr
+        run: |
+          # Check if a PR already exists for temp branch -> dev-CM
+          PR_URL=$(gh pr list --head ${{ env.TEMP_BRANCH }} --base dev-CM --limit 1 --json url --jq '.[0].url' 2>/dev/null || echo "")
+          
+          if [ -z "$PR_URL" ]; then
+            # Create a new PR
+            PR_URL=$(gh pr create \
+              --base dev-CM \
+              --head ${{ env.TEMP_BRANCH }} \
+              --title "Synchronizing RM Changes to CM" \
+              --body "Auto-created PR from temp branch ${{ env.TEMP_BRANCH }} to dev-CM. Please resolve conflicts if any, then merge." \
+              --web=false)
+          fi
+          
+          echo "Pull Request URL: $PR_URL"
+          echo "PR_URL=$PR_URL" >> $GITHUB_ENV
