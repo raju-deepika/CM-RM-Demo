@@ -60,6 +60,5 @@ jobs:
               --body "Auto-created PR from temp branch ${{ env.TEMP_BRANCH }} to dev-CM. Please resolve conflicts if any, then merge." \
               --web=false)
           fi
-
           echo "Pull Request URL: $PR_URL"
           echo "PR_URL=$PR_URL" >> $GITHUB_ENV
