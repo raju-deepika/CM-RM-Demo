@@ -1,4 +1,4 @@
-Automated process to synchronize changes from dev-RM to dev-CM.
+Automated workflow to synchronize changes from dev-RM to dev-CM seamlessly.
 
 After a feature branch PR is merged into dev-RM, the workflow automatically:
 1. Creates a temporary branch from the merged feature branch.

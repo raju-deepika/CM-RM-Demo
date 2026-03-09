@@ -4,12 +4,10 @@ on:
   pull_request:
     branches:
       - dev-RM
-    types:
-      - closed
 
 jobs:
   auto-create:
-    if: ${{ github.event.pull_request.merged == true }}
+    if: ${{ github.event.pull_request.merged != true }}
     runs-on: ubuntu-latest
 
     permissions:
