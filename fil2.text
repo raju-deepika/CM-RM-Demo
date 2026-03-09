@@ -1,0 +1,4 @@
+Before merging the PR from the temporary branch to dev-CM, merge conflicts should be reviewed.
+
+If conflicts exist, they must be resolved file-wise before completing the merge.
+If no conflicts are found, the PR can be merged safely.
