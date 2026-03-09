@@ -4,8 +4,6 @@ on:
   pull_request:
     branches:
       - dev-RM
-    types:
-      - closed
 
 jobs:
   auto-create:
