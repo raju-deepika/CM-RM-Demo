@@ -1,0 +1,6 @@
+Automated process to synchronize changes from dev-RM to dev-CM.
+
+After a feature branch PR is merged into dev-RM, the workflow automatically:
+1. Creates a temporary branch from the merged feature branch.
+2. Pushes the temporary branch to the repository.
+3. Creates a Pull Request from the temporary branch to dev-CM.
