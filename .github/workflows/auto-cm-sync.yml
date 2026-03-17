@@ -48,6 +48,7 @@ jobs:
         run: |
           # Check if a PR already exists for temp branch -> dev-CM
           PR_URL=$(gh pr list --head ${{ env.TEMP_BRANCH }} --base dev-CM --limit 1 --json url --jq '.[0].url' 2>/dev/null || echo "")
+
           
           if [ -z "$PR_URL" ]; then
             # Create a new PR
